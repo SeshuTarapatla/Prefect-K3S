@@ -5,6 +5,7 @@ from pathlib import Path
 from subprocess import run
 from sys import version_info
 
+from my_modules.git import Git
 from my_modules.logger import get_logger
 from my_modules.postgres import Postgres, PostgresSecret
 from my_modules.datetime import now
@@ -54,6 +55,7 @@ def build(prefix: str = PREFECT_IMAGE):
     sqlalchemy_conn_url = PostgresSecret.get_connection_string(
         PREFECT_DATABASE, local=False, engine="asyncpg"
     )
+    git = Git()
 
     log.info(f"Current python version: {python_version}")
     log.info(f"Prefect version installed: {prefect_version}")
@@ -66,6 +68,7 @@ def build(prefix: str = PREFECT_IMAGE):
             f"FROM {base_image}",
             "",
             f"ENV SQLALCHEMY_CONN_URL={sqlalchemy_conn_url}",
+            f"RUN uv pip install git+{git.remote_url}@{git.current_branch}"
         )
     )
     dockerfile.write_text(dockefile_contents)

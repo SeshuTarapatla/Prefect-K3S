@@ -1136,7 +1136,7 @@ wheels = [
 [[package]]
 name = "my-modules"
 version = "0.1.0"
-source = { git = "https://github.com/SeshuTarapatla/my-modules.git#1b95553ab3a47379a22a127da911e677a46581c5" }
+source = { git = "https://github.com/SeshuTarapatla/my-modules.git#981d85c66735acab2a94a7ebebd27ce513435b87" }
 dependencies = [
     { name = "kubernetes" },
     { name = "psycopg2-binary" },
