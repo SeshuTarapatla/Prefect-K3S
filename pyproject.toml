@@ -1,0 +1,29 @@
+[project]
+name = "prefect-k3s"
+version = "0.1.0"
+description = "A helper project to build my custom prefect image and setup deployed in local Kubernetes."
+readme = "README.md"
+authors = [
+    { name = "SeshuTarapatla", email = "seshu.tarapatla@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "my-modules",
+    "sqlalchemy>=2.0.48",
+    "typer>=0.24.1",
+]
+
+[project.scripts]
+prefect-k3s = "prefect_k3s:prefect_k3s"
+
+[build-system]
+requires = ["uv_build>=0.10.8,<0.11.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+my-modules = { git = "https://github.com/SeshuTarapatla/my-modules.git" }
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.2.0",
+]
