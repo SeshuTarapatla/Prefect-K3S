@@ -1,5 +1,6 @@
 __all__ = ["prefect_k3s"]
 
+import asyncio
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import run
@@ -90,6 +91,80 @@ def build(prefix: str = PREFECT_IMAGE):
     dockerfile.write_text(dockefile_contents)
     run(["docker", "build", "--no-cache", "-t", custom_image, "."])
     log.info(f"Build complete. Time taken: {now() - started_at}")
+
+
+@prefect_k3s.command(
+    name="purge",
+    help="Cancel and delete all flow runs that have not reached Completed or Failed state.",
+)
+def purge():
+    from prefect.client.orchestration import get_client
+    from prefect.client.schemas.filters import (
+        FlowRunFilter,
+        FlowRunFilterState,
+        FlowRunFilterStateType,
+    )
+    from prefect.client.schemas.objects import StateType
+    from prefect.states import Cancelling
+
+    CANCEL_FIRST = {StateType.RUNNING, StateType.PAUSED}
+
+    async def _purge() -> None:
+        async with get_client() as client:
+            flow_run_filter = FlowRunFilter(
+                state=FlowRunFilterState(
+                    type=FlowRunFilterStateType(
+                        not_any_=[StateType.COMPLETED, StateType.FAILED]
+                    )
+                )
+            )
+
+            all_runs = []
+            offset = 0
+            batch = 200
+            while True:
+                page = await client.read_flow_runs(
+                    flow_run_filter=flow_run_filter, limit=batch, offset=offset
+                )
+                all_runs.extend(page)
+                if len(page) < batch:
+                    break
+                offset += batch
+
+            if not all_runs:
+                log.info("No flow runs to clean up.")
+                return
+
+            log.info(f"Found [bold]{len(all_runs)}[/] flow run(s) to clean up.")
+
+            for run in all_runs:
+                if run.state and run.state.type in CANCEL_FIRST:
+                    try:
+                        await client.set_flow_run_state(
+                            run.id, Cancelling(), force=True
+                        )
+                        log.info(
+                            f"Cancelled: [cyan]{run.name}[/] ({run.id}) "
+                            f"[{run.state.type.value}]"
+                        )
+                    except Exception as e:
+                        log.warning(f"Could not cancel {run.name} ({run.id}): {e}")
+
+            deleted = 0
+            for run in all_runs:
+                try:
+                    await client.delete_flow_run(run.id)
+                    state_label = run.state.type.value if run.state else "unknown"
+                    log.info(
+                        f"Deleted:   [cyan]{run.name}[/] ({run.id}) [{state_label}]"
+                    )
+                    deleted += 1
+                except Exception as e:
+                    log.warning(f"Could not delete {run.name} ({run.id}): {e}")
+
+            log.info(f"Done. Deleted [bold green]{deleted}[/] flow run(s).")
+
+    asyncio.run(_purge())
 
 
 @prefect_k3s.command(
