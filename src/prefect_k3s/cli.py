@@ -95,7 +95,7 @@ def build(prefix: str = PREFECT_IMAGE):
 
 @prefect_k3s.command(
     name="purge",
-    help="Cancel and delete all flow runs that have not reached Completed or Failed state.",
+    help="Cancel and delete all flow runs that have not reached Completed state.",
 )
 def purge():
     from prefect.client.orchestration import get_client
@@ -114,7 +114,7 @@ def purge():
             flow_run_filter = FlowRunFilter(
                 state=FlowRunFilterState(
                     type=FlowRunFilterStateType(
-                        not_any_=[StateType.COMPLETED, StateType.FAILED]
+                        not_any_=[StateType.COMPLETED]
                     )
                 )
             )
