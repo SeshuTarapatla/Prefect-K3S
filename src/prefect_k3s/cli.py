@@ -168,6 +168,35 @@ def purge():
 
 
 @prefect_k3s.command(
+    name="reset-pool",
+    help="Clear stale worker registrations from the work pool without deleting scheduled runs.",
+)
+def reset_pool():
+    from os import environ
+
+    pool = environ.get("PREFECT_DEFAULT_WORK_POOL_NAME", "default-pool")
+    api_url = PrefectConfig.PREFECT_API_URL_LOCAL()
+
+    try:
+        resp = httpx.get(f"{api_url}/work_pools/{pool}/workers", timeout=10)
+        workers = resp.json().get("results", [])
+        for w in workers:
+            name = w["name"]
+            httpx.delete(f"{api_url}/work_pools/{pool}/workers/{name}", timeout=10)
+            log.info(f"Removed stale worker: {name}")
+        log.info(
+            f"Cleared {len(workers)} stale worker(s) from '{pool}'."
+            if workers
+            else f"No stale workers found in '{pool}'."
+        )
+    except Exception as e:
+        log.warning(f"Could not clear stale workers: {e}")
+
+    run(["prefect", "work-pool", "create", pool, "--type", "process"], capture_output=True)
+    log.info(f"Work pool '{pool}' ready.")
+
+
+@prefect_k3s.command(
     name="wait", help="Wait for Prefect server readiness and liveness."
 )
 def wait(
