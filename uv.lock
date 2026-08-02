@@ -1184,7 +1184,7 @@ wheels = [
 [[package]]
 name = "my-modules"
 version = "0.1.0"
-source = { git = "https://github.com/SeshuTarapatla/my-modules.git#2de78b82bd10ff2a19b8b823b88a60170e9b4283" }
+source = { git = "https://github.com/SeshuTarapatla/my-modules.git?rev=94b308a#94b308a5a31aea215fe3404bffb21922864c0fdc" }
 dependencies = [
     { name = "adbutils" },
     { name = "kubernetes" },
@@ -1534,7 +1534,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "my-modules", git = "https://github.com/SeshuTarapatla/my-modules.git" },
+    { name = "my-modules", git = "https://github.com/SeshuTarapatla/my-modules.git?rev=94b308a" },
     { name = "prefect", specifier = ">=3.6.21" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "sqlalchemy", specifier = ">=2.0.48" },

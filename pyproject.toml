@@ -23,7 +23,12 @@ requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.uv.sources]
-my-modules = { git = "https://github.com/SeshuTarapatla/my-modules.git" }
+# Pinned to match Insta-Automate's and wsl-bridge's own pins (D65,
+# Insta-Automate-Control-Center DECISIONS.md D71) — uv's resolver treats an
+# unpinned git URL and a @rev-pinned one for the same package as genuinely
+# conflicting sources, so every repo in this dependency graph that
+# references my-modules has to agree on the same pin.
+my-modules = { git = "https://github.com/SeshuTarapatla/my-modules.git", rev = "94b308a" }
 
 [dependency-groups]
 dev = [
